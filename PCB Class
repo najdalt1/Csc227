@@ -1,0 +1,21 @@
+class PCB {
+    int pid;
+    String state; 
+    int burstTime;
+    int remainingTime;
+    int priority;
+    int memory;
+    int waitingTime;
+    int turnaroundTime;
+    int startTime = -1;
+    int finishTime = -1;
+
+    public PCB(int pid, int burstTime, int priority, int memory) {
+        this.pid = pid;
+        this.burstTime = burstTime;
+        this.remainingTime = burstTime;
+        this.priority = priority;
+        this.memory = memory;
+        this.state = "new";
+    }
+}
