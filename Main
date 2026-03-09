@@ -1,0 +1,41 @@
+import java.util.LinkedList;
+import java.util.Queue;
+
+public class Main {
+    public static void main(String[] args) {
+        Queue<PCB> jobQueue = new LinkedList<>();
+        Queue<PCB> readyQueue = new LinkedList<>();
+
+        // Thread 1: reading job.txt and filling jobQueue
+        JobLoaderThread thread1 = new JobLoaderThread(jobQueue, "job.txt");
+
+        // Thread 2: moving processes from jobQueue to readyQueue based on memory
+        MemoryManager manager = new MemoryManager(jobQueue, readyQueue);
+        Thread thread2 = new Thread(manager);
+
+        // Start both threads
+
+        thread1.start();
+        thread2.start();
+
+        // Wait until threads finish
+
+        try {
+            thread1.join();
+            thread2.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // Print final queue
+
+        System.out.println("\nReady Queue:");
+        for (PCB p : readyQueue) {
+            System.out.println("P" + p.pid +
+                    " | Burst: " + p.burstTime +
+                    " | Priority: " + p.priority +
+                    " | Memory: " + p.memory +
+                    " | State: " + p.state);
+        }
+    }
+}
