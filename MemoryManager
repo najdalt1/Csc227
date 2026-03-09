@@ -1,0 +1,94 @@
+import java.util.*;
+class MemoryManager implements Runnable {
+private Queue<PCB> jobQueue;
+private Queue<PCB> readyQueue;
+private int totalMemory = 2048;
+private int usedMemory = 0;
+public MemoryManager(Queue<PCB> jobQueue, Queue<PCB> readyQueue) {
+this.jobQueue = jobQueue;
+this.readyQueue = readyQueue;
+}
+@Override
+public void run() {
+while (!jobQueue.isEmpty()) {
+PCB process = jobQueue.peek();
+if (process != null && process.memory + usedMemory <= totalMemory) {
+jobQueue.poll();
+usedMemory += process.memory;
+process.state = "ready";
+readyQueue.add(process);
+System.out.println("Process " + process.pid + " admitted to ready queue");
+} else {
+}
+}
+// If memory not enough wait a bit
+try {
+Thread.sleep(1);
+} catch (InterruptedException e) {
+e.printStackTrace();
+}
+}
+}
+System.out.println("All processes admitted to ready queue. Memory thread finished.");
+
+import java.util.Queue;
+
+
+
+
+
+
+
+
+
+public class MemoryManager implements Runnable {
+
+    private Queue<PCB> jobQueue;
+    private Queue<PCB> readyQueue;
+
+    private final int totalMemory = 2048;
+    private int usedMemory = 0;
+
+    public MemoryManager(Queue<PCB> jobQueue, Queue<PCB> readyQueue) {
+        this.jobQueue = jobQueue;
+        this.readyQueue = readyQueue;
+    }
+
+    @Override
+    public void run() {
+        while (!Main.loadingDone || !jobQueue.isEmpty()) {
+
+            PCB process = jobQueue.peek();
+
+            if (process != null) {
+                if (usedMemory + process.memory <= totalMemory) {
+                    jobQueue.poll(); // remove from job queue
+                    usedMemory += process.memory; // allocate memory
+                    process.state = "ready";
+                    readyQueue.add(process); // move to ready queue
+
+                    System.out.println("Process P" + process.pid + " moved to Ready Queue");
+                    System.out.println("Used Memory: " + usedMemory + " / " + totalMemory);
+                } else {
+                    System.out.println("Not enough memory for Process P" + process.pid);
+                }
+            }
+
+            try {
+                Thread.sleep(1); // simulation time unit
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        System.out.println("MemoryManager finished.");
+    }
+
+    public int getUsedMemory() {
+        return usedMemory;
+    }
+
+    public int getTotalMemory() {
+        return totalMemory;
+    }
+}
