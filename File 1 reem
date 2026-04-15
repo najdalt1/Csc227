@@ -78,7 +78,7 @@ public static void SJF(Queue<PCB> readyQueue) {
 
     System.out.println();
 
-    // Table
+    // Tabl
     double totalWT = 0, totalTAT = 0;
 
     System.out.println("\nPID | Burst | Start | Finish | Waiting | Turnaround");
