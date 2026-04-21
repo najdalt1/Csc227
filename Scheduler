@@ -1,0 +1,170 @@
+import java.util.*;
+
+public class Scheduler {
+
+```
+private static final int TIME_QUANTUM = 5;
+
+public static void run(Queue<PCB> readyQueue, int algorithm) {
+    List<PCB> processes = new ArrayList<>(readyQueue);
+
+    switch (algorithm) {
+        case 1 -> runSJF(processes);
+        case 2 -> runRoundRobin(processes);
+        default -> System.out.println("Algorithm " + algorithm + " is not handled by this module.");
+    }
+}
+
+private static void runSJF(List<PCB> processes) {
+    System.out.println("\n========================================");
+    System.out.println("   Scheduling Algorithm: SJF (Non-Preemptive)");
+    System.out.println("========================================\n");
+
+    List<PCB> sorted = new ArrayList<>(processes);
+    sorted.sort(Comparator.comparingInt((PCB p) -> p.burstTime));
+
+    for (PCB p : sorted) resetProcess(p);
+
+    int currentTime = 0;
+    List<GanttEntry> gantt = new ArrayList<>();
+
+    for (PCB p : sorted) {
+        p.state = "running";
+        p.startTime = currentTime;
+        p.waitingTime = currentTime;
+
+        gantt.add(new GanttEntry(p.pid, currentTime, currentTime + p.burstTime));
+
+        currentTime += p.burstTime;
+        p.finishTime = currentTime;
+        p.turnaroundTime = p.finishTime;
+        p.state = "terminated";
+    }
+
+    printGanttChart(gantt);
+    printTable(sorted);
+    printMetrics(sorted);
+}
+
+private static void runRoundRobin(List<PCB> processes) {
+    System.out.println("\n========================================");
+    System.out.println("   Scheduling Algorithm: Round Robin  (q = " + TIME_QUANTUM + " ms)");
+    System.out.println("========================================\n");
+
+    for (PCB p : processes) resetProcess(p);
+
+    Queue<PCB> rrQueue = new LinkedList<>(processes);
+
+    int currentTime = 0;
+    List<GanttEntry> gantt = new ArrayList<>();
+
+    while (!rrQueue.isEmpty()) {
+        PCB p = rrQueue.poll();
+        p.state = "running";
+
+        if (p.startTime == -1) {
+            p.startTime = currentTime;
+        }
+
+        int slice = Math.min(TIME_QUANTUM, p.remainingTime);
+
+        gantt.add(new GanttEntry(p.pid, currentTime, currentTime + slice));
+
+        currentTime += slice;
+        p.remainingTime -= slice;
+
+        if (p.remainingTime == 0) {
+            p.finishTime = currentTime;
+            p.turnaroundTime = p.finishTime;
+            p.waitingTime = p.turnaroundTime - p.burstTime;
+            p.state = "terminated";
+        } else {
+            p.state = "ready";
+            rrQueue.add(p);
+        }
+    }
+
+    printGanttChart(gantt);
+    printTable(processes);
+    printMetrics(processes);
+}
+
+private static void resetProcess(PCB p) {
+    p.remainingTime = p.burstTime;
+    p.startTime = -1;
+    p.finishTime = -1;
+    p.waitingTime = 0;
+    p.turnaroundTime = 0;
+    p.state = "ready";
+}
+
+private static void printGanttChart(List<GanttEntry> gantt) {
+    System.out.println("── Gantt Chart ──────────────────────────────────────────────");
+
+    StringBuilder bar = new StringBuilder("|");
+    StringBuilder times = new StringBuilder();
+
+    for (GanttEntry e : gantt) {
+        String label = " P" + e.pid + " ";
+        int width = Math.max(label.length(), String.valueOf(e.end).length() + 1);
+        bar.append(center(label, width)).append("|");
+    }
+
+    times.append(gantt.get(0).start);
+    for (GanttEntry e : gantt) {
+        String endStr = String.valueOf(e.end);
+        String label = " P" + e.pid + " ";
+        int width = Math.max(label.length(), endStr.length() + 1);
+        times.append(" ".repeat(width - endStr.length() + 1)).append(endStr);
+    }
+
+    System.out.println(bar);
+    System.out.println(times);
+    System.out.println();
+
+    for (GanttEntry e : gantt) {
+        System.out.printf("  P%-3d  [%4d ms – %4d ms]%n", e.pid, e.start, e.end);
+    }
+    System.out.println();
+}
+
+private static void printTable(List<PCB> processes) {
+    System.out.println("── Process Table ────────────────────────────────────────────");
+    System.out.printf("%-6s %-12s %-12s %-16s %-14s %-16s%n",
+            "PID", "Burst(ms)", "Start(ms)", "Terminate(ms)", "Waiting(ms)", "Turnaround(ms)");
+    System.out.println("-".repeat(78));
+    for (PCB p : processes) {
+        System.out.printf("%-6d %-12d %-12d %-16d %-14d %-16d%n",
+                p.pid, p.burstTime, p.startTime, p.finishTime, p.waitingTime, p.turnaroundTime);
+    }
+    System.out.println();
+}
+
+private static void printMetrics(List<PCB> processes) {
+    double avgTAT = processes.stream().mapToInt(p -> p.turnaroundTime).average().orElse(0);
+    double avgWT = processes.stream().mapToInt(p -> p.waitingTime).average().orElse(0);
+
+    System.out.println("── Performance Metrics ──────────────────────────────────────");
+    System.out.printf("  Average Turnaround Time : %.2f ms%n", avgTAT);
+    System.out.printf("  Average Waiting Time    : %.2f ms%n", avgWT);
+    System.out.println("═".repeat(60) + "\n");
+}
+
+private static String center(String s, int width) {
+    int pad = width - s.length();
+    int left = pad / 2;
+    int right = pad - left;
+    return " ".repeat(left) + s + " ".repeat(right);
+}
+
+private static class GanttEntry {
+    int pid, start, end;
+    GanttEntry(int pid, int start, int end) {
+        this.pid = pid;
+        this.start = start;
+        this.end = end;
+    }
+}
+```
+
+}
