@@ -165,6 +165,5 @@ private static class GanttEntry {
         this.end = end;
     }
 }
-```
 
 }
